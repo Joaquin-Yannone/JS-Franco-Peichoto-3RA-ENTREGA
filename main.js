@@ -5,20 +5,33 @@ const Producto = function (marca, modelo, mililitros, precio, stock) {
     this.precio = precio
     this.stock = stock
 }
-let producto1 = new Producto("versace", "eros flame edt", 200, 225000, 15)
-let producto2 = new Producto("armaf", "club de nuit intense edt", 105, 60000, 10)
-let producto3 = new Producto("antonio banderas", "the icon elixir", 100, 57000, 20)
-let producto4 = new Producto("issey miyake", "leau dissey edt", 125, 230000, 10)
-let producto5 = new Producto("jean paul gaultier", "scandal le parfum", 100, 215000, 10)
-let producto6 = new Producto("dior", "sauvage parfum", 100, 301000, 15)
-let producto7 = new Producto("paco rabanne", "million gold", 100, 205000, 5)
+let lista = [];
 
-let lista = [producto1, producto2, producto3, producto4, producto5, producto6, producto7]
+async function obtenerProductosDesdeAPI() {
+    try {
+        const response = await fetch('https://67a6ac98510789ef0dfbed68.mockapi.io/productos');
+        if (!response.ok) {
+            throw new Error('No se pudo obtener la lista de productos');
+        }
+        const productos = await response.json();
+
+        lista = productos.map(producto => new Producto(producto.marca, producto.modelo, producto.mililitros, producto.precio, producto.stock));
+
+        localStorage.setItem("productos", JSON.stringify(lista));
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: `Hubo un problema al obtener los productos: ${error.message}`
+        });
+    }
+}
 
 if (localStorage.getItem("productos")) {
-    lista = JSON.parse(localStorage.getItem("productos"))
+    lista = JSON.parse(localStorage.getItem("productos"));
 } else {
-    lista = lista
+    obtenerProductosDesdeAPI();
 }
 
 function filtrarProducto() {
@@ -31,7 +44,7 @@ function filtrarProducto() {
 
         preConfirm: (palabraClave) => {
             palabraClave = palabraClave.trim().toUpperCase();
-            let resultado = lista.filter((producto) => producto.modelo.toUpperCase().includes(palabraClave));
+            let resultado = lista.filter((producto) => producto.modelo?.toUpperCase().includes(palabraClave));
 
             if (resultado.length > 0) {
                 let tableHtml = '<table><tr><th>Marca</th><th>Modelo</th><th>Mililitros</th><th>Precio</th><th>Stock</th></tr>';
